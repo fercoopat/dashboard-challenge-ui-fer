@@ -1,5 +1,5 @@
 import { ChevronDownIcon } from 'lucide-react';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ActiveModifiers, DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,13 @@ type Props = {
 };
 const DateRangeFilter = ({ value = INITIAL_RANGE, onChange }: Props) => {
   const [range, setRange] = useState<DateRange>(value);
+
+  // Sync internal state with value prop
+  useEffect(() => {
+    if (value && (value.from !== range.from || value.to !== range.to)) {
+      setRange(value);
+    }
+  }, [value, range.from, range.to]);
 
   const { isOpen: isOpenFromPicker, onToggle: onToggleFromPicker } =
     useToggle();
@@ -52,10 +59,18 @@ const DateRangeFilter = ({ value = INITIAL_RANGE, onChange }: Props) => {
       _activeModifiers: ActiveModifiers,
       _e: React.MouseEvent
     ) => {
-      handleUpdateRange({
-        ...range,
-        from: date,
-      });
+      if (date) {
+        // Ensure the date is set to local midnight to avoid timezone issues
+        const localDate = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+        handleUpdateRange({
+          ...range,
+          from: localDate,
+        });
+      }
       onToggleFromPicker();
     },
     [handleUpdateRange, range, onToggleFromPicker]
@@ -68,10 +83,18 @@ const DateRangeFilter = ({ value = INITIAL_RANGE, onChange }: Props) => {
       _activeModifiers: ActiveModifiers,
       _e: React.MouseEvent
     ) => {
-      handleUpdateRange({
-        ...range,
-        to: date,
-      });
+      if (date) {
+        // Ensure the date is set to local midnight to avoid timezone issues
+        const localDate = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+        handleUpdateRange({
+          ...range,
+          to: localDate,
+        });
+      }
       onToggleToPicker();
     },
     [handleUpdateRange, range, onToggleToPicker]
@@ -100,6 +123,7 @@ const DateRangeFilter = ({ value = INITIAL_RANGE, onChange }: Props) => {
           <PopoverContent className='w-auto overflow-hidden p-0' align='start'>
             <Calendar
               mode='single'
+              defaultMonth={range.from}
               selected={range.from}
               captionLayout='dropdown'
               onSelect={handleChangeFrom}
@@ -123,6 +147,7 @@ const DateRangeFilter = ({ value = INITIAL_RANGE, onChange }: Props) => {
           <PopoverContent className='w-auto overflow-hidden p-0' align='start'>
             <Calendar
               mode='single'
+              defaultMonth={range.to}
               selected={range.to}
               captionLayout='dropdown'
               onSelect={handleChangeTo}

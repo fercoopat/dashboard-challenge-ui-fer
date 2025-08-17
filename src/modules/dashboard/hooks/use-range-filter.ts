@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
 import { useSearchParams } from 'react-router';
 
-import { formatDateRange } from '@/lib/helpers/date.helpers';
+import { formatDateRange, parseLocalDate } from '@/lib/helpers/date.helpers';
 import { DASHBOARD_FILTER_KEYS } from '@/modules/dashboard/constants/dashboard-filter.keys';
 import { DEFAULT_DATE_RANGE } from '@/modules/dashboard/constants/dashboard.constants';
 
@@ -14,8 +14,8 @@ export const useRangeFilter = () => {
     const to = searchParams.get(DASHBOARD_FILTER_KEYS.TO_DATE_RANGE);
 
     return {
-      from: from ? new Date(from) : DEFAULT_DATE_RANGE.from,
-      to: to ? new Date(to) : DEFAULT_DATE_RANGE.to,
+      from: from ? parseLocalDate(from) : DEFAULT_DATE_RANGE.from,
+      to: to ? parseLocalDate(to) : DEFAULT_DATE_RANGE.to,
     };
   }, [searchParams]);
 
@@ -32,8 +32,15 @@ export const useRangeFilter = () => {
     [setSearchParams, searchParams]
   );
 
+  const clearRangeParams = useCallback(() => {
+    searchParams.delete(DASHBOARD_FILTER_KEYS.FROM_DATE_RANGE);
+    searchParams.delete(DASHBOARD_FILTER_KEYS.TO_DATE_RANGE);
+    setSearchParams(searchParams);
+  }, [searchParams, setSearchParams]);
+
   return {
     rangeValues,
     handleRangeChange,
+    clearRangeParams,
   };
 };

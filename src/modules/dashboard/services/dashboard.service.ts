@@ -6,7 +6,6 @@ import {
   OPERATORS,
 } from '@/modules/dashboard/constants/dashboard.constants';
 import {
-  AirQualityData,
   RangeResponse,
   SummaryResponse,
   TimelineResponse,
@@ -80,19 +79,6 @@ export class DashboardService {
     } catch (error) {
       console.error('Error fetching range data:', error);
       throw new Error(`Failed to fetch range data: ${error}`);
-    }
-  }
-
-  static async getHistoricalData(
-    from: Date,
-    to: Date
-  ): Promise<AirQualityData[]> {
-    try {
-      const response = await this.getRangeData(from, to);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching historical data:', error);
-      throw new Error(`Failed to fetch historical data: ${error}`);
     }
   }
 }

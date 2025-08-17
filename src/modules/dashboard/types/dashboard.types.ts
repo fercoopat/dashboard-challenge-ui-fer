@@ -1,7 +1,11 @@
-import { AIR_QUERY_PARAM, OPERATORS, INTERVALS } from '../constants/dashboard.constants';
+import {
+  AIR_QUERY_PARAM,
+  INTERVALS,
+  OPERATORS,
+} from '../constants/dashboard.constants';
 
 export interface AirQualityData {
-  date: string;
+  Date: string; // format "2004-03-10T23:00:00.000Z"
   CO?: number;
   PT08S1?: number;
   NMHC?: number;
@@ -15,18 +19,13 @@ export interface AirQualityData {
   T?: number;
   RH?: number;
   AH?: number;
+  _id?: string;
+  createdAt?: string; // format "2004-03-10T23:00:00.000Z"
+  updatedAt?: string; // format "2004-03-10T23:00:00.000Z"
+  Time?: string; // format "18.00.00"
 }
 
-export type AirQualityField = Exclude<
-  {
-    [K in keyof AirQualityData]: AirQualityData[K] extends number | undefined
-      ? K
-      : never;
-  }[keyof AirQualityData],
-  undefined
->;
-
-export type TimelineResponse<T extends AirQualityField> = Array<
+export type TimelineResponse<T extends AIR_QUERY_PARAM> = Array<
   {
     [K in T]: number;
   } & {
@@ -34,11 +33,9 @@ export type TimelineResponse<T extends AirQualityField> = Array<
     interval: string; // "2004-03-10"
   }
 >;
-export type SummaryResponse = Record<AirQualityField, number>;
+export type SummaryResponse = Record<AIR_QUERY_PARAM, number>;
 
-export interface RangeResponse {
-  data: AirQualityData[];
-}
+export type RangeResponse = Array<AirQualityData>;
 
 export interface MetricCard {
   key: string;

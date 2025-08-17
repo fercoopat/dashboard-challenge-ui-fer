@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createDashboardQueryKeys } from '@/modules/dashboard/constants/dashboard-query-keys';
+import { DASHBOARD_QUERY_KEYS } from '@/modules/dashboard/constants/dashboard-query-keys';
 import {
   AIR_QUERY_PARAM,
   DEFAULT_DATE_RANGE,
@@ -11,13 +11,12 @@ import {
 } from '@/modules/dashboard/constants/dashboard.constants';
 import { DashboardService } from '@/modules/dashboard/services/dashboard.service';
 import {
-  AirQualityField,
   ChartDataPoint,
   FilterState,
   MetricCard,
 } from '@/modules/dashboard/types/dashboard.types';
 
-export const useDashboard = () => {
+export const useAirQualityService = (onResetFilters?: () => void) => {
   const [filters, setFilters] = useState<FilterState>({
     dateRange: DEFAULT_DATE_RANGE,
     selectedParameters: [
@@ -35,11 +34,12 @@ export const useDashboard = () => {
   >({});
 
   const summaryQuery = useQuery({
-    queryKey: createDashboardQueryKeys.summary(
+    queryKey: [
+      DASHBOARD_QUERY_KEYS.SUMMARY,
       filters.dateRange.from,
       filters.dateRange.to,
-      filters.operator
-    ),
+      filters.operator,
+    ],
     queryFn: () =>
       DashboardService.getSummary(
         filters.dateRange.from,
@@ -47,16 +47,17 @@ export const useDashboard = () => {
         filters.operator
       ),
     enabled: !!filters.dateRange.from && !!filters.dateRange.to,
-    refetchInterval: 100000,
+    refetchInterval: 2 * 60 * 1000, // 2 minutes in milliseconds
   });
 
   const timelineQuery = useQuery({
-    queryKey: createDashboardQueryKeys.timeline(
-      filters.selectedParameters[0] || AIR_QUERY_PARAM.CO,
+    queryKey: [
+      DASHBOARD_QUERY_KEYS.TIMELINE,
+      filters.selectedParameters.at(0) || '',
       filters.dateRange.from,
       filters.dateRange.to,
-      filters.interval
-    ),
+      filters.interval,
+    ],
     queryFn: () =>
       DashboardService.getTimeline(
         filters.selectedParameters[0] || AIR_QUERY_PARAM.CO,
@@ -71,12 +72,13 @@ export const useDashboard = () => {
   });
 
   const historicalDataQuery = useQuery({
-    queryKey: createDashboardQueryKeys.historical(
+    queryKey: [
+      DASHBOARD_QUERY_KEYS.HISTORICAL,
       filters.dateRange.from,
-      filters.dateRange.to
-    ),
+      filters.dateRange.to,
+    ],
     queryFn: () =>
-      DashboardService.getHistoricalData(
+      DashboardService.getRangeData(
         filters.dateRange.from,
         filters.dateRange.to
       ),
@@ -99,7 +101,7 @@ export const useDashboard = () => {
 
       return {
         key,
-        label: VALUES_KEY_LABELS[key as AirQualityField]?.label || key,
+        label: VALUES_KEY_LABELS[key as AIR_QUERY_PARAM]?.label || key,
         value: currentValue,
         previousValue,
         change,
@@ -174,7 +176,13 @@ export const useDashboard = () => {
       operator: OPERATORS.AVG,
       interval: INTERVALS.DAILY,
     });
-  }, []);
+
+    // Reset previous metrics to clear change indicators
+    setPreviousMetrics({});
+
+    // Call the callback to clear URL search parameters
+    onResetFilters?.();
+  }, [onResetFilters]);
 
   // Error handling
   const hasError =

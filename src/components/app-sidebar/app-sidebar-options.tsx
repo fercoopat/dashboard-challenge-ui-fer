@@ -16,7 +16,7 @@ export type AppSidebarSection = {
 
 export const appSidebarSections: AppSidebarSection[] = [
   {
-    title: 'Airlytics 💨',
+    title: 'General',
     options: [
       {
         icon: LayoutDashboardIcon,

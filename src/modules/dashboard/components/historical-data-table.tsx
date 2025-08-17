@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Eye, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,23 @@ import {
 import { VALUES_KEY_LABELS } from '@/modules/dashboard/constants/dashboard.constants';
 import { AirQualityData } from '@/modules/dashboard/types/dashboard.types';
 
+const ALL_COLUMNS: Array<{ key: keyof AirQualityData; label: string }> = [
+  { key: 'Date', label: 'Fecha' },
+  { key: 'CO', label: VALUES_KEY_LABELS.CO.label },
+  { key: 'PT08S1', label: VALUES_KEY_LABELS.PT08S1.label },
+  { key: 'NMHC', label: VALUES_KEY_LABELS.NMHC.label },
+  { key: 'C6H6', label: VALUES_KEY_LABELS.C6H6.label },
+  { key: 'PT08S2', label: VALUES_KEY_LABELS.PT08S2.label },
+  { key: 'NOx', label: VALUES_KEY_LABELS.NOx.label },
+  { key: 'PT08S3', label: VALUES_KEY_LABELS.PT08S3.label },
+  { key: 'NO2', label: VALUES_KEY_LABELS.NO2.label },
+  { key: 'PT08S4', label: VALUES_KEY_LABELS.PT08S4.label },
+  { key: 'PT08S5', label: VALUES_KEY_LABELS.PT08S5.label },
+  { key: 'T', label: VALUES_KEY_LABELS.T.label },
+  { key: 'RH', label: VALUES_KEY_LABELS.RH.label },
+  { key: 'AH', label: VALUES_KEY_LABELS.AH.label },
+];
+
 type SortConfig = {
   key: keyof AirQualityData;
   direction: 'asc' | 'desc';
@@ -32,34 +50,38 @@ interface Props {
   isLoading?: boolean;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: 'date',
+    key: 'Date',
     direction: 'desc',
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
   const [visibleColumns, setVisibleColumns] = useState<
     Set<keyof AirQualityData>
-  >(new Set(['date', 'CO', 'NO2', 'T', 'RH']));
+  >(new Set(['Date', 'CO', 'NO2', 'T', 'RH']));
 
-  const allColumns: Array<{ key: keyof AirQualityData; label: string }> = [
-    { key: 'date', label: 'Fecha' },
-    { key: 'CO', label: VALUES_KEY_LABELS.CO.label },
-    { key: 'PT08S1', label: VALUES_KEY_LABELS.PT08S1.label },
-    { key: 'NMHC', label: VALUES_KEY_LABELS.NMHC.label },
-    { key: 'C6H6', label: VALUES_KEY_LABELS.C6H6.label },
-    { key: 'PT08S2', label: VALUES_KEY_LABELS.PT08S2.label },
-    { key: 'NOx', label: VALUES_KEY_LABELS.NOx.label },
-    { key: 'PT08S3', label: VALUES_KEY_LABELS.PT08S3.label },
-    { key: 'NO2', label: VALUES_KEY_LABELS.NO2.label },
-    { key: 'PT08S4', label: VALUES_KEY_LABELS.PT08S4.label },
-    { key: 'PT08S5', label: VALUES_KEY_LABELS.PT08S5.label },
-    { key: 'T', label: VALUES_KEY_LABELS.T.label },
-    { key: 'RH', label: VALUES_KEY_LABELS.RH.label },
-    { key: 'AH', label: VALUES_KEY_LABELS.AH.label },
-  ];
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Leer y sincronizar currentPage desde URL
+  const currentPage = useMemo(() => {
+    const page = Number(searchParams.get('page')) || 1;
+    return page < 1 ? 1 : page;
+  }, [searchParams]);
+
+  const setCurrentPage = useCallback(
+    (page: number) => {
+      const newParams = new URLSearchParams(searchParams);
+      if (page === 1) {
+        newParams.delete('page');
+      } else {
+        newParams.set('page', page.toString());
+      }
+      setSearchParams(newParams, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   const filteredAndSortedData = useMemo(() => {
     const filtered = data?.filter((item) => {
@@ -67,13 +89,15 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
 
       const searchLower = searchTerm.toLowerCase();
       return (
-        item.date.toLowerCase().includes(searchLower) ||
+        item.Date.toLowerCase().includes(searchLower) ||
         Object.entries(item).some(([key, value]) => {
-          if (key === 'date') return false;
+          if (key === 'Date') return false; // ya se busca arriba
           return value?.toString().toLowerCase().includes(searchLower);
         })
       );
     });
+
+    if (!filtered) return [];
 
     const sorted = [...filtered].sort((a, b) => {
       const aValue = a[sortConfig.key];
@@ -83,7 +107,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
       if (aValue === undefined) return 1;
       if (bValue === undefined) return -1;
 
-      if (sortConfig.key === 'date') {
+      if (sortConfig.key === 'Date') {
         return sortConfig.direction === 'asc'
           ? new Date(aValue).getTime() - new Date(bValue).getTime()
           : new Date(bValue).getTime() - new Date(aValue).getTime();
@@ -96,12 +120,18 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
     return sorted;
   }, [data, searchTerm, sortConfig]);
 
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredAndSortedData, currentPage, itemsPerPage]);
+  const totalPages = Math.ceil(filteredAndSortedData.length / ITEMS_PER_PAGE);
 
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, setCurrentPage, totalPages]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedData, currentPage]);
 
   const handleSort = (key: keyof AirQualityData) => {
     setSortConfig((prev) => ({
@@ -127,7 +157,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
   ) => {
     if (value === undefined || value === null) return '-';
 
-    if (key === 'date') {
+    if (key === 'Date') {
       return new Date(value).toLocaleDateString();
     }
 
@@ -192,7 +222,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end' className='w-56'>
-                {allColumns.map(({ key, label }) => (
+                {ALL_COLUMNS.map(({ key, label }) => (
                   <DropdownMenuItem key={key} onClick={() => toggleColumn(key)}>
                     <Checkbox
                       checked={visibleColumns.has(key)}
@@ -213,7 +243,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
           <Table>
             <TableHeader>
               <TableRow>
-                {allColumns.map(({ key, label }) => {
+                {ALL_COLUMNS.map(({ key, label }) => {
                   if (!visibleColumns.has(key)) return null;
 
                   return (
@@ -239,10 +269,10 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
             <TableBody>
               {paginatedData.map((row, index) => (
                 <TableRow
-                  key={`${row.date}-${index}`}
+                  key={`${row.Date}-${index}`}
                   className='hover:bg-muted/50'
                 >
-                  {allColumns.map(({ key }) => {
+                  {ALL_COLUMNS.map(({ key }) => {
                     if (!visibleColumns.has(key)) return null;
 
                     return (
@@ -261,9 +291,9 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
         {totalPages > 1 && (
           <div className='flex items-center justify-between mt-4'>
             <div className='text-sm text-muted-foreground'>
-              Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+              Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} a{' '}
               {Math.min(
-                currentPage * itemsPerPage,
+                currentPage * ITEMS_PER_PAGE,
                 filteredAndSortedData.length
               )}{' '}
               de {filteredAndSortedData.length} resultados
@@ -273,43 +303,52 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 Anterior
               </Button>
 
               <div className='flex items-center gap-1'>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                {Array.from({ length: totalPages }, (_, i) => {
                   const page = i + 1;
-                  if (
+
+                  // Lógica para mostrar máximo 5 botones con elipsis lógica
+                  const showPage =
                     totalPages <= 5 ||
                     page === 1 ||
                     page === totalPages ||
-                    (page >= currentPage - 2 && page <= currentPage + 2)
-                  ) {
-                    return (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? 'default' : 'outline'}
-                        size='sm'
-                        onClick={() => setCurrentPage(page)}
-                        className='w-8 h-8 p-0'
-                      >
-                        {page}
-                      </Button>
-                    );
-                  }
-                  return null;
+                    (page >= currentPage - 1 && page <= currentPage + 1);
+
+                  const showEllipsisStart =
+                    i === 2 && currentPage > 3 && totalPages > 5;
+                  const showEllipsisEnd =
+                    i === totalPages - 3 &&
+                    currentPage < totalPages - 2 &&
+                    totalPages > 5;
+
+                  if (showEllipsisStart) return <span key='start'>...</span>;
+                  if (showEllipsisEnd) return <span key='end'>...</span>;
+                  if (!showPage) return null;
+
+                  return (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? 'default' : 'outline'}
+                      size='sm'
+                      onClick={() => setCurrentPage(page)}
+                      className='w-8 h-8 p-0'
+                    >
+                      {page}
+                    </Button>
+                  );
                 })}
               </div>
 
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
+                onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 Siguiente

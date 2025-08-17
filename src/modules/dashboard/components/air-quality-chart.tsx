@@ -1,5 +1,23 @@
-import React, { useState, useMemo } from 'react';
+import { ZoomOut } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  Brush,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 import {
   Select,
   SelectContent,
@@ -7,31 +25,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-} from '@/components/ui/chart';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Brush,
-} from 'recharts';
 import {
   AIR_QUERY_PARAM,
   INTERVALS,
   VALUES_KEY_LABELS,
-} from '../constants/dashboard.constants';
-import type { ChartDataPoint } from '../types/dashboard.types';
-import { ZoomOut } from 'lucide-react';
+} from '@/modules/dashboard/constants/dashboard.constants';
+import { ChartDataPoint } from '@/modules/dashboard/types/dashboard.types';
 
-interface AirQualityChartProps {
+const colors = [
+  '#3b82f6',
+  '#ef4444',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#84cc16',
+  '#f97316',
+  '#6366f1',
+  '#14b8a6',
+  '#22c55e',
+];
+
+interface Props {
   data: ChartDataPoint[];
   selectedParameters: AIR_QUERY_PARAM[];
   onParameterChange: (parameters: AIR_QUERY_PARAM[]) => void;
@@ -40,35 +56,20 @@ interface AirQualityChartProps {
   isLoading?: boolean;
 }
 
-const AirQualityChart: React.FC<AirQualityChartProps> = ({
+const AirQualityChart = ({
   data,
   selectedParameters,
   onParameterChange,
   interval,
   onIntervalChange,
   isLoading = false,
-}) => {
+}: Props) => {
   const [zoomDomain, setZoomDomain] = useState<{
     left: string;
     right: string;
   } | null>(null);
 
   const chartConfig = useMemo(() => {
-    const colors = [
-      '#3b82f6',
-      '#ef4444',
-      '#10b981',
-      '#f59e0b',
-      '#8b5cf6',
-      '#ec4899',
-      '#06b6d4',
-      '#84cc16',
-      '#f97316',
-      '#6366f1',
-      '#14b8a6',
-      '#22c55e',
-    ];
-
     const config: Record<string, { label: string; color: string }> = {};
     selectedParameters.forEach((param, index) => {
       config[param] = {
@@ -80,17 +81,20 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
     return config;
   }, [selectedParameters]);
 
-  const handleParameterToggle = (parameter: AIR_QUERY_PARAM) => {
-    if (selectedParameters.includes(parameter)) {
-      onParameterChange(selectedParameters.filter((p) => p !== parameter));
-    } else {
-      onParameterChange([...selectedParameters, parameter]);
-    }
-  };
+  const handleParameterToggle = useCallback(
+    (parameter: AIR_QUERY_PARAM) => {
+      if (selectedParameters.includes(parameter)) {
+        onParameterChange(selectedParameters.filter((p) => p !== parameter));
+      } else {
+        onParameterChange([...selectedParameters, parameter]);
+      }
+    },
+    [onParameterChange, selectedParameters]
+  );
 
-  const handleZoomReset = () => {
+  const handleZoomReset = useCallback(() => {
     setZoomDomain(null);
-  };
+  }, [setZoomDomain]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBrushChange = (domain: any) => {
@@ -121,13 +125,14 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
   }
 
   return (
-    <Card className='w-full'>
+    <Card className='w-full max-h-[800px]'>
       <CardHeader>
         <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
           <div>
             <CardTitle className='text-xl font-semibold'>
               Línea de Tiempo - Calidad del Aire
             </CardTitle>
+
             <p className='text-sm text-muted-foreground mt-1'>
               Visualización de parámetros ambientales en el tiempo
             </p>
@@ -141,14 +146,17 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
               <SelectTrigger className='w-40'>
                 <SelectValue />
               </SelectTrigger>
+
               <SelectContent>
                 <SelectItem value={INTERVALS.DAILY}>Diario</SelectItem>
+
                 <SelectItem value={INTERVALS.MONTHLY}>Mensual</SelectItem>
+
                 <SelectItem value={INTERVALS.YEARLY}>Anual</SelectItem>
               </SelectContent>
             </Select>
 
-            {zoomDomain && (
+            {!!zoomDomain && (
               <Button
                 variant='outline'
                 size='sm'
@@ -163,12 +171,13 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className='space-y-4'>
+      <CardContent className='overflow-hidden'>
+        <div className='space-y-4 overflow-y-auto max-h-[600px]'>
           {/* Parameter Selection */}
-          <div className='flex flex-wrap gap-2'>
+          <div className='flex flex-wrap gap-2 mb-4'>
             {Object.entries(VALUES_KEY_LABELS).map(([key, { label }]) => {
               const paramKey = key as AIR_QUERY_PARAM;
+
               return (
                 <Button
                   key={key}
@@ -194,14 +203,15 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
           </div>
 
           {/* Chart */}
-          <div className='h-96 w-full'>
-            <ChartContainer config={chartConfig}>
+          <div className='relative w-full h-[400px] overflow-hidden border border-gray-200 rounded-lg'>
+            <ChartContainer config={chartConfig} className='h-full w-full'>
               <ResponsiveContainer width='100%' height='100%'>
                 <LineChart
                   data={data}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+
                   <XAxis
                     dataKey='date'
                     stroke='#888888'
@@ -210,7 +220,9 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
                       new Date(value).toLocaleDateString()
                     }
                   />
+
                   <YAxis stroke='#888888' fontSize={12} />
+
                   <ChartTooltip
                     content={<ChartTooltipContent />}
                     labelFormatter={(value) =>
@@ -253,14 +265,16 @@ const AirQualityChart: React.FC<AirQualityChartProps> = ({
           </div>
 
           {/* Legend */}
-          <ChartLegend
-            payload={selectedParameters.map((param) => ({
-              value: param,
-              dataKey: param,
-              color: chartConfig[param]?.color,
-              name: chartConfig[param]?.label || param,
-            }))}
-          />
+          <div className='mt-4'>
+            <ChartLegend
+              payload={selectedParameters.map((param) => ({
+                value: param,
+                dataKey: param,
+                color: chartConfig[param]?.color,
+                name: chartConfig[param]?.label || param,
+              }))}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
