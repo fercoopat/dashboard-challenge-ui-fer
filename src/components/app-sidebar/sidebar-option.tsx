@@ -1,5 +1,4 @@
 import { memo, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { AppSidebarOption } from '@/components/app-sidebar/app-sidebar-options';
@@ -15,18 +14,16 @@ type Props = {
 };
 
 const SidebarOption = ({ option }: Props) => {
-  const { t } = useTranslation('sidebar');
-
   const Icon = useMemo(() => option?.icon, [option?.icon]);
 
   return (
     <SidebarMenu>
       {!option?.items?.length ? (
         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip={t(option?.title)}>
+          <SidebarMenuButton asChild tooltip={option?.title}>
             <Link to={option.url}>
               <Icon />
-              <span>{t(option?.title)}</span>
+              <span>{option?.title}</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

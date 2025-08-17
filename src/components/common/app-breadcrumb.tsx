@@ -1,3 +1,6 @@
+import { Fragment, useCallback, useMemo } from 'react';
+import { Link, useLocation } from 'react-router';
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -5,15 +8,9 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router';
-import { Fragment } from 'react/jsx-runtime';
 
 export default function AppBreadcrumb() {
   const { pathname } = useLocation();
-
-  const { t } = useTranslation('breadcrumb');
 
   const paths = useMemo(
     () => pathname?.split('/')?.filter((path) => !!path),
@@ -32,7 +29,7 @@ export default function AppBreadcrumb() {
           <Fragment key={`${path}_${index}`}>
             <BreadcrumbItem className='hidden md:block'>
               <BreadcrumbLink href='#' asChild>
-                <Link to={path}>{t(path)}</Link>
+                <Link to={path}>{path}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
 

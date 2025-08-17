@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router';
 
-import AppBreadcrumb from '@/components/common/app-breadcrumb';
 import AppSidebar from '@/components/app-sidebar/app-sidebar';
+import AppBreadcrumb from '@/components/common/app-breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,

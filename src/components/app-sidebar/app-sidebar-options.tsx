@@ -16,11 +16,11 @@ export type AppSidebarSection = {
 
 export const appSidebarSections: AppSidebarSection[] = [
   {
-    title: 'nav-main.title',
+    title: 'Airlytics 💨',
     options: [
       {
         icon: LayoutDashboardIcon,
-        title: 'nav-main.dashboard',
+        title: 'Panel principal',
         url: DASHBOARD_PATHS.MAIN_PATH,
       },
     ],

@@ -6,13 +6,13 @@ import { Toaster } from '@/components/ui/sonner';
 
 const MainProvider = ({ children }: PropsWithChildren) => {
   return (
-    <QueryProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <QueryProvider>
         {children}
 
-        <Toaster richColors />
-      </ThemeProvider>
-    </QueryProvider>
+        <Toaster richColors closeButton />
+      </QueryProvider>
+    </ThemeProvider>
   );
 };
 
