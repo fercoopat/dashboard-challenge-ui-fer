@@ -259,21 +259,18 @@ const AirQualityChart = ({
                       new Date(value).toLocaleDateString()
                     }
                   />
+
+                  <ChartLegend
+                    payload={selectedParameters.map((param) => ({
+                      value: param,
+                      dataKey: param,
+                      color: chartConfig[param]?.color,
+                      name: chartConfig[param]?.label || param,
+                    }))}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
-          </div>
-
-          {/* Legend */}
-          <div className='mt-4'>
-            <ChartLegend
-              payload={selectedParameters.map((param) => ({
-                value: param,
-                dataKey: param,
-                color: chartConfig[param]?.color,
-                name: chartConfig[param]?.label || param,
-              }))}
-            />
           </div>
         </div>
       </CardContent>
