@@ -1,0 +1,10 @@
+{
+  "fields": {
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "address": "Dirección"
+  },
+  "list": {
+    "title": "Listado de instituciones"
+  }
+}
