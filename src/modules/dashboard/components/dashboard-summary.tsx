@@ -1,10 +1,13 @@
 import MetricCards from '@/modules/dashboard/components/metric-cards';
 import OperatorSelector from '@/modules/dashboard/components/operator-selector';
 import { useDashboard } from '@/modules/dashboard/contexts/dashboard.context';
+import { useMetricsWithChange } from '@/modules/dashboard/hooks/use-metrics-with-change';
 
 const DashboardSummary = () => {
   const { filters, isLoadingSummaryQuery, metricCards, updateOperator } =
     useDashboard();
+
+  const metrics = useMetricsWithChange(metricCards);
 
   return (
     <section className='space-y-4'>
@@ -34,10 +37,7 @@ const DashboardSummary = () => {
           </div>
 
           <div className='mt-4'>
-            <MetricCards
-              metrics={metricCards}
-              isLoading={isLoadingSummaryQuery}
-            />
+            <MetricCards metrics={metrics} isLoading={isLoadingSummaryQuery} />
           </div>
         </div>
       </div>
