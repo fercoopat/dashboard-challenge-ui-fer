@@ -1,4 +1,11 @@
-import { ChevronDown, ChevronUp, Eye, Search } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUp,
+  Eye,
+  Search,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -221,6 +228,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
                   Columnas
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent align='end' className='w-56'>
                 {ALL_COLUMNS.map(({ key, label }) => (
                   <DropdownMenuItem key={key} onClick={() => toggleColumn(key)}>
@@ -266,6 +274,7 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
                 })}
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {paginatedData.map((row, index) => (
                 <TableRow
@@ -302,11 +311,11 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
             <div className='flex items-center gap-2'>
               <Button
                 variant='outline'
-                size='sm'
+                size='icon'
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Anterior
+                <ChevronLeftIcon />
               </Button>
 
               <div className='flex items-center gap-1'>
@@ -328,7 +337,9 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
                     totalPages > 5;
 
                   if (showEllipsisStart) return <span key='start'>...</span>;
+
                   if (showEllipsisEnd) return <span key='end'>...</span>;
+
                   if (!showPage) return null;
 
                   return (
@@ -347,11 +358,11 @@ const HistoricalDataTable = ({ data = [], isLoading = false }: Props) => {
 
               <Button
                 variant='outline'
-                size='sm'
+                size='icon'
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Siguiente
+                <ChevronRightIcon />
               </Button>
             </div>
           </div>

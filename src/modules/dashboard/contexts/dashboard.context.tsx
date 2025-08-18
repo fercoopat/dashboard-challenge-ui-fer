@@ -24,17 +24,19 @@ type DashboardContextValue = {
   handleRangeChange: (range: DateRange) => void;
   clearRangeParams: () => void;
   // air quality service values
-  metricCards: MetricCard[];
   chartData: ChartDataPoint[];
-  historicalData: RangeResponse;
-  selectedParameter: AIR_QUERY_PARAM;
-  filters: FilterState;
-  isLoadingSummaryQuery: boolean;
-  isLoadingTimelineQuery: boolean;
-  isLoadingHistoricalDataQuery: boolean;
-  isRefetching: boolean;
   error: Error | null;
   errorMessage: string | undefined;
+  filters: FilterState;
+  historicalData: RangeResponse;
+  isLoadingHistoricalDataQuery: boolean;
+  isLoadingSummaryQuery: boolean;
+  isLoadingTimelineQuery: boolean;
+  isRefetchingHistoricalDataQuery: boolean;
+  isRefetchingSummaryQuery: boolean;
+  isRefetchingTimelineQuery: boolean;
+  metricCards: MetricCard[];
+  selectedParameter: AIR_QUERY_PARAM;
   updateDateRange: (from: Date, to: Date) => void;
   updateOperator: (operator: OPERATORS) => void;
   updateInterval: (interval: INTERVALS) => void;

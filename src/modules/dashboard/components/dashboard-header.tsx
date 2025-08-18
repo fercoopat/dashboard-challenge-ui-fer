@@ -1,62 +1,54 @@
 import { RefreshCw } from 'lucide-react';
 import { useCallback } from 'react';
-import { toast } from 'sonner';
 
 import { DateRangeFilter } from '@/components/date-range-filter';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useDashboard } from '@/modules/dashboard/contexts/dashboard.context';
 
 const DashboardHeader = () => {
   const {
     isLoadingSummaryQuery,
-    isRefetching,
     rangeValues,
     handleRangeChange,
-    refetchHistorical,
-    refetchSummary,
-    refetchTimeline,
     resetFilters,
+    updateDateRange,
   } = useDashboard();
 
-  const handleRefresh = useCallback(async () => {
-    try {
-      await Promise.all([
-        refetchSummary(),
-        refetchTimeline(),
-        refetchHistorical(),
-      ]);
-      toast.success('Datos actualizados correctamente');
-    } catch (error) {
-      console.error(error);
-      toast.error('Error al actualizar los datos');
+  const handleChangeDateRange = useCallback(() => {
+    if (rangeValues.from && rangeValues.to) {
+      updateDateRange(rangeValues.from, rangeValues.to);
     }
-  }, [refetchHistorical, refetchSummary, refetchTimeline]);
+  }, [updateDateRange, rangeValues.from, rangeValues.to]);
 
   return (
     <header className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
       <div className='container mx-auto px-4 py-4'>
-        <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
+        <div className='flex flex-col items-start lg:flex-row lg:items-center lg:justify-between gap-4'>
           <div className='space-y-2'>
             <h1 className='text-3xl font-bold tracking-tight'>
               Panel de Control de Calidad del Aire
             </h1>
+
             <p className='text-muted-foreground'>
               Monitoreo moderno y dinámico en tiempo real
             </p>
           </div>
 
-          <div className='flex flex-col sm:flex-row items-center sm:items-end gap-4'>
+          <div className='flex flex-col items-start sm:flex-row sm:items-end gap-4'>
             <DateRangeFilter value={rangeValues} onChange={handleRangeChange} />
 
             <div className='flex items-center gap-2'>
               <Button
                 variant='outline'
-                onClick={handleRefresh}
+                onClick={handleChangeDateRange}
                 disabled={isLoadingSummaryQuery}
                 className='flex items-center gap-2'
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`}
+                  className={cn('size-4', {
+                    'animate-spin': isLoadingSummaryQuery,
+                  })}
                 />
                 Actualizar
               </Button>
