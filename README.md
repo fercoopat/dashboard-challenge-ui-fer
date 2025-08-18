@@ -60,15 +60,6 @@ The dashboard integrates with the following endpoints:
 | RH     | RH            | Relative Humidity        |
 | AH     | AH            | Absolute Humidity        |
 
-## Technology Stack
-
-- **Frontend**: React 19 + TypeScript
-- **UI Components**: Radix UI + Tailwind CSS
-- **Charts**: Recharts with custom theming
-- **State Management**: React Query for server state
-- **Data Fetching**: Axios with error handling
-- **Real-time Updates**: Polling with 1-second intervals
-
 ## Getting Started
 
 ### Prerequisites
@@ -97,28 +88,6 @@ pnpm build
 pnpm preview
 ```
 
-## Project Structure
-
-```
-src/modules/dashboard/
-├── components/
-│   ├── metric-cards.tsx          # Summary metric cards
-│   ├── operator-selector.tsx     # Operator selection (avg/min/max)
-│   ├── air-quality-chart.tsx     # Interactive time series chart
-│   └── historical-data-table.tsx # Data table with pagination
-├── hooks/
-│   ├── use-dashboard.ts          # Main dashboard logic
-│   └── use-range-filter.ts      # Date range management
-├── services/
-│   └── dashboard.service.ts      # API integration
-├── constants/
-│   └── dashboard.constants.ts    # Constants and enums
-├── types/
-│   └── dashboard.types.ts        # TypeScript interfaces
-└── pages/
-    └── dashboard.page.tsx        # Main dashboard page
-```
-
 ## Key Features Implementation
 
 ### Real-time Updates
@@ -145,41 +114,5 @@ src/modules/dashboard/
 - **Error boundaries** with helpful error messages
 - **Toast notifications** for user feedback
 - **Keyboard navigation** support
-
-## Customization
-
-### Adding New Parameters
-
-1. Update `VALUES_KEY_LABELS` in `dashboard.constants.ts`
-2. Add new fields to `AirQualityData` interface
-3. Update table columns in `historical-data-table.tsx`
-
-### Modifying Chart Behavior
-
-1. Edit `air-quality-chart.tsx` for chart-specific changes
-2. Update chart configuration in `use-dashboard.ts`
-3. Modify interval handling for different time granularities
-
-### API Integration
-
-1. Update endpoints in `dashboard.constants.ts`
-2. Modify service methods in `dashboard.service.ts`
-3. Adjust data transformation in the dashboard hook
-
-## Browser Support
-
-- **Modern browsers** with ES2020+ support
-- **Chrome 90+**, **Firefox 88+**, **Safari 14+**
-- **Mobile browsers** with touch support
-
-## Contributing
-
-1. Follow the existing code structure and patterns
-2. Use TypeScript for all new code
-3. Implement proper error handling
-4. Add loading states for async operations
-5. Test responsive behavior across devices
-
-## License
 
 This project is part of the Dashboard Challenge UI implementation.
