@@ -9,8 +9,7 @@ import DashboardSummary from '@/modules/dashboard/components/dashboard-summary';
 import { useDashboard } from '@/modules/dashboard/contexts/dashboard.context';
 
 const DashboardPage = () => {
-  const { hasError, errorMessage, rangeValues, updateDateRange } =
-    useDashboard();
+  const { error, errorMessage, rangeValues, updateDateRange } = useDashboard();
 
   // Sync URL params with dashboard state
   useEffect(() => {
@@ -21,12 +20,12 @@ const DashboardPage = () => {
 
   // Error handling with toast notifications
   useEffect(() => {
-    if (hasError && errorMessage) {
+    if (error && errorMessage) {
       toast.error('Error en el dashboard', {
         description: errorMessage,
       });
     }
-  }, [hasError, errorMessage]);
+  }, [error, errorMessage]);
 
   return (
     <div className='min-h-screen bg-background'>
@@ -36,7 +35,7 @@ const DashboardPage = () => {
       {/* Main Content */}
       <main className='container mx-auto px-4 py-6 space-y-6'>
         {/* Error Alert */}
-        <ErrorAlertMessage errorMessage={errorMessage} showError={!!hasError} />
+        <ErrorAlertMessage errorMessage={errorMessage} showError={!!error} />
 
         {/* Summary Section */}
         <DashboardSummary />

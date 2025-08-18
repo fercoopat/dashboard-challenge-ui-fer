@@ -5,20 +5,20 @@ const DashboardChart = () => {
   const {
     chartData,
     filters,
-    isLoading,
+    isLoadingTimelineQuery,
     updateInterval,
-    updateSelectedParameters,
+    updateSelectedParameter,
   } = useDashboard();
 
   return (
     <section className='space-y-4'>
       <AirQualityChart
         data={chartData}
-        selectedParameters={filters.selectedParameters}
-        onParameterChange={updateSelectedParameters}
         interval={filters.interval}
+        isLoading={isLoadingTimelineQuery}
+        selectedParameter={filters.selectedParameter}
         onIntervalChange={updateInterval}
-        isLoading={isLoading}
+        onParameterChange={updateSelectedParameter}
       />
     </section>
   );

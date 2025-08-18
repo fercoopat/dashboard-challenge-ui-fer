@@ -3,7 +3,8 @@ import OperatorSelector from '@/modules/dashboard/components/operator-selector';
 import { useDashboard } from '@/modules/dashboard/contexts/dashboard.context';
 
 const DashboardSummary = () => {
-  const { filters, isLoading, metricCards, updateOperator } = useDashboard();
+  const { filters, isLoadingSummaryQuery, metricCards, updateOperator } =
+    useDashboard();
 
   return (
     <section className='space-y-4'>
@@ -12,7 +13,7 @@ const DashboardSummary = () => {
           <OperatorSelector
             selectedOperator={filters.operator}
             onOperatorChange={updateOperator}
-            isLoading={isLoading}
+            isLoading={isLoadingSummaryQuery}
           />
         </div>
 
@@ -33,7 +34,10 @@ const DashboardSummary = () => {
           </div>
 
           <div className='mt-4'>
-            <MetricCards metrics={metricCards} isLoading={isLoading} />
+            <MetricCards
+              metrics={metricCards}
+              isLoading={isLoadingSummaryQuery}
+            />
           </div>
         </div>
       </div>

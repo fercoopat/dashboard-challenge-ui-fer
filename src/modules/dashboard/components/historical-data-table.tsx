@@ -20,24 +20,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { VALUES_KEY_LABELS } from '@/modules/dashboard/constants/dashboard.constants';
+import { AIR_QUALITY_CHART_MAP } from '@/modules/dashboard/constants/dashboard.constants';
 import { AirQualityData } from '@/modules/dashboard/types/dashboard.types';
 
 const ALL_COLUMNS: Array<{ key: keyof AirQualityData; label: string }> = [
   { key: 'Date', label: 'Fecha' },
-  { key: 'CO', label: VALUES_KEY_LABELS.CO.label },
-  { key: 'PT08S1', label: VALUES_KEY_LABELS.PT08S1.label },
-  { key: 'NMHC', label: VALUES_KEY_LABELS.NMHC.label },
-  { key: 'C6H6', label: VALUES_KEY_LABELS.C6H6.label },
-  { key: 'PT08S2', label: VALUES_KEY_LABELS.PT08S2.label },
-  { key: 'NOx', label: VALUES_KEY_LABELS.NOx.label },
-  { key: 'PT08S3', label: VALUES_KEY_LABELS.PT08S3.label },
-  { key: 'NO2', label: VALUES_KEY_LABELS.NO2.label },
-  { key: 'PT08S4', label: VALUES_KEY_LABELS.PT08S4.label },
-  { key: 'PT08S5', label: VALUES_KEY_LABELS.PT08S5.label },
-  { key: 'T', label: VALUES_KEY_LABELS.T.label },
-  { key: 'RH', label: VALUES_KEY_LABELS.RH.label },
-  { key: 'AH', label: VALUES_KEY_LABELS.AH.label },
+  { key: 'CO', label: AIR_QUALITY_CHART_MAP.CO.label },
+  { key: 'PT08S1', label: AIR_QUALITY_CHART_MAP.PT08S1.label },
+  { key: 'NMHC', label: AIR_QUALITY_CHART_MAP.NMHC.label },
+  { key: 'C6H6', label: AIR_QUALITY_CHART_MAP.C6H6.label },
+  { key: 'PT08S2', label: AIR_QUALITY_CHART_MAP.PT08S2.label },
+  { key: 'NOx', label: AIR_QUALITY_CHART_MAP.NOx.label },
+  { key: 'PT08S3', label: AIR_QUALITY_CHART_MAP.PT08S3.label },
+  { key: 'NO2', label: AIR_QUALITY_CHART_MAP.NO2.label },
+  { key: 'PT08S4', label: AIR_QUALITY_CHART_MAP.PT08S4.label },
+  { key: 'PT08S5', label: AIR_QUALITY_CHART_MAP.PT08S5.label },
+  { key: 'T', label: AIR_QUALITY_CHART_MAP.T.label },
+  { key: 'RH', label: AIR_QUALITY_CHART_MAP.RH.label },
+  { key: 'AH', label: AIR_QUALITY_CHART_MAP.AH.label },
 ];
 
 type SortConfig = {

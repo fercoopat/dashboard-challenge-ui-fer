@@ -1,18 +1,11 @@
 import { ZoomOut } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import {
-  Brush,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Brush, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartTooltip,
@@ -26,78 +19,83 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  AIR_QUALITY_CHART_MAP,
   AIR_QUERY_PARAM,
   INTERVALS,
-  VALUES_KEY_LABELS,
 } from '@/modules/dashboard/constants/dashboard.constants';
 import { ChartDataPoint } from '@/modules/dashboard/types/dashboard.types';
 
-const colors = [
-  '#3b82f6',
-  '#ef4444',
-  '#10b981',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
-  '#f97316',
-  '#6366f1',
-  '#14b8a6',
-  '#22c55e',
-];
+interface BrushStartEndIndex {
+  startIndex?: number;
+  endIndex?: number;
+}
+
+const CHART_COLORS: Record<AIR_QUERY_PARAM, string> = {
+  CO: '#3b82f6',
+  PT08S1: '#ef4444',
+  NMHC: '#10b981',
+  C6H6: '#f59e0b',
+  PT08S2: '#8b5cf6',
+  NOx: '#ec4899',
+  PT08S3: '#06b6d4',
+  NO2: '#84cc16',
+  PT08S4: '#f97316',
+  PT08S5: '#6366f1',
+  T: '#14b8a6',
+  RH: '#22c55e',
+  AH: '#14b8a6',
+} as const;
 
 interface Props {
-  data: ChartDataPoint[];
-  selectedParameters: AIR_QUERY_PARAM[];
-  onParameterChange: (parameters: AIR_QUERY_PARAM[]) => void;
+  data: ChartDataPoint[] | undefined;
   interval: INTERVALS;
-  onIntervalChange: (interval: INTERVALS) => void;
   isLoading?: boolean;
+  selectedParameter: AIR_QUERY_PARAM;
+  onIntervalChange: (interval: INTERVALS) => void;
+  onParameterChange: (parameter: AIR_QUERY_PARAM) => void;
 }
 
 const AirQualityChart = ({
-  data,
-  selectedParameters,
-  onParameterChange,
+  data = [],
   interval,
-  onIntervalChange,
   isLoading = false,
+  selectedParameter,
+  onIntervalChange,
+  onParameterChange,
 }: Props) => {
   const [zoomDomain, setZoomDomain] = useState<{
     left: string;
     right: string;
   } | null>(null);
 
-  const chartConfig = useMemo(() => {
-    const config: Record<string, { label: string; color: string }> = {};
-    selectedParameters.forEach((param, index) => {
-      config[param] = {
-        label: VALUES_KEY_LABELS[param]?.label || param,
-        color: colors[index % colors.length],
-      };
-    });
+  const chartConfig = useMemo((): ChartConfig => {
+    return {
+      [selectedParameter]: {
+        label: AIR_QUALITY_CHART_MAP[selectedParameter]?.label,
+        color: CHART_COLORS[selectedParameter],
+      },
+    };
+  }, [selectedParameter]);
 
-    return config;
-  }, [selectedParameters]);
-
-  const handleParameterToggle = useCallback(
-    (parameter: AIR_QUERY_PARAM) => {
-      if (selectedParameters.includes(parameter)) {
-        onParameterChange(selectedParameters.filter((p) => p !== parameter));
-      } else {
-        onParameterChange([...selectedParameters, parameter]);
-      }
+  const handleParameterChange = useCallback(
+    (parameter: AIR_QUERY_PARAM) => () => {
+      onParameterChange(parameter);
     },
-    [onParameterChange, selectedParameters]
+    [onParameterChange]
   );
 
   const handleZoomReset = useCallback(() => {
     setZoomDomain(null);
   }, [setZoomDomain]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBrushChange = (domain: any) => {
+  const handleIntervalChange = useCallback(
+    (value: string) => {
+      onIntervalChange(value as INTERVALS);
+    },
+    [onIntervalChange]
+  );
+
+  const handleBrushChange = (domain: BrushStartEndIndex) => {
     if (
       domain &&
       typeof domain.startIndex === 'number' &&
@@ -113,12 +111,12 @@ const AirQualityChart = ({
 
   if (isLoading) {
     return (
-      <Card className='w-full'>
+      <Card className='w-full min-h-[530px] max-h-[600px]'>
         <CardHeader>
-          <div className='h-6 bg-gray-200 rounded w-1/3 animate-pulse'></div>
+          <div className='h-full min-h-9 bg-gray-200 rounded w-1/3 animate-pulse'></div>
         </CardHeader>
         <CardContent>
-          <div className='h-80 bg-gray-200 rounded animate-pulse'></div>
+          <div className='h-full min-h-100 bg-gray-200 rounded animate-pulse'></div>
         </CardContent>
       </Card>
     );
@@ -139,10 +137,7 @@ const AirQualityChart = ({
           </div>
 
           <div className='flex flex-col sm:flex-row gap-2'>
-            <Select
-              value={interval}
-              onValueChange={(value) => onIntervalChange(value as INTERVALS)}
-            >
+            <Select value={interval} onValueChange={handleIntervalChange}>
               <SelectTrigger className='w-40'>
                 <SelectValue />
               </SelectTrigger>
@@ -159,12 +154,11 @@ const AirQualityChart = ({
             {!!zoomDomain && (
               <Button
                 variant='outline'
-                size='sm'
                 onClick={handleZoomReset}
                 className='flex items-center gap-2'
               >
                 <ZoomOut className='h-4 w-4' />
-                Reset Zoom
+                Restablecer Zoom
               </Button>
             )}
           </div>
@@ -172,28 +166,25 @@ const AirQualityChart = ({
       </CardHeader>
 
       <CardContent className='overflow-hidden'>
-        <div className='space-y-4 overflow-y-auto max-h-[600px]'>
+        <div className='space-y-4 max-h-[600px] overflow-y-auto'>
           {/* Parameter Selection */}
-          <div className='flex flex-wrap gap-2 mb-4'>
-            {Object.entries(VALUES_KEY_LABELS).map(([key, { label }]) => {
-              const paramKey = key as AIR_QUERY_PARAM;
+          <div className='flex flex-wrap gap-2'>
+            {Object.entries(AIR_QUALITY_CHART_MAP).map(([key, { label }]) => {
+              const param = key as AIR_QUERY_PARAM;
+              const isActive = param === selectedParameter;
+              const color = CHART_COLORS[param];
 
               return (
                 <Button
-                  key={key}
-                  variant={
-                    selectedParameters.includes(paramKey)
-                      ? 'default'
-                      : 'outline'
-                  }
+                  key={param}
+                  variant={isActive ? 'default' : 'ghost'}
                   size='sm'
-                  onClick={() => handleParameterToggle(paramKey)}
-                  className='text-xs'
+                  onClick={handleParameterChange(param)}
+                  className='text-xs px-3 py-1 transition-colors duration-150'
                   style={{
-                    backgroundColor: selectedParameters.includes(paramKey)
-                      ? chartConfig[paramKey]?.color
-                      : undefined,
-                    borderColor: chartConfig[paramKey]?.color,
+                    backgroundColor: isActive ? color : undefined,
+                    borderColor: color,
+                    color: isActive ? '#fff' : color,
                   }}
                 >
                   {label}
@@ -205,71 +196,68 @@ const AirQualityChart = ({
           {/* Chart */}
           <div className='relative w-full h-[400px] overflow-hidden border border-gray-200 rounded-lg'>
             <ChartContainer config={chartConfig} className='h-full w-full'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <LineChart
-                  data={data}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+              <LineChart
+                data={data}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
 
-                  <XAxis
-                    dataKey='date'
-                    stroke='#888888'
-                    fontSize={12}
-                    tickFormatter={(value) =>
-                      new Date(value).toLocaleDateString()
-                    }
-                  />
+                <XAxis
+                  dataKey='date'
+                  stroke='#888888'
+                  fontSize={12}
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString()
+                  }
+                />
 
-                  <YAxis stroke='#888888' fontSize={12} />
+                <YAxis stroke='#888888' fontSize={12} />
 
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                    labelFormatter={(value) =>
-                      new Date(value).toLocaleDateString()
-                    }
-                  />
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                  labelFormatter={(value) =>
+                    new Date(value).toLocaleDateString()
+                  }
+                />
 
-                  {selectedParameters.map((parameter) => (
-                    <Line
-                      key={parameter}
-                      type='monotone'
-                      dataKey={parameter}
-                      stroke={chartConfig[parameter]?.color}
-                      strokeWidth={2}
-                      dot={{
-                        fill: chartConfig[parameter]?.color,
-                        strokeWidth: 2,
-                        r: 4,
-                      }}
-                      activeDot={{
-                        r: 6,
-                        stroke: chartConfig[parameter]?.color,
-                        strokeWidth: 2,
-                      }}
-                    />
-                  ))}
+                <Line
+                  key={selectedParameter}
+                  type='monotone'
+                  dataKey={selectedParameter}
+                  stroke={chartConfig?.[selectedParameter]?.color}
+                  strokeWidth={2}
+                  dot={{
+                    fill: chartConfig?.[selectedParameter]?.color,
+                    strokeWidth: 2,
+                    r: 4,
+                  }}
+                  activeDot={{
+                    r: 6,
+                    stroke: chartConfig?.[selectedParameter]?.color,
+                    strokeWidth: 2,
+                  }}
+                />
 
-                  <Brush
-                    dataKey='date'
-                    height={30}
-                    stroke='#888888'
-                    onChange={handleBrushChange}
-                    tickFormatter={(value) =>
-                      new Date(value).toLocaleDateString()
-                    }
-                  />
+                <Brush
+                  dataKey='date'
+                  height={30}
+                  stroke='#888888'
+                  onChange={handleBrushChange}
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString()
+                  }
+                />
 
-                  <ChartLegend
-                    payload={selectedParameters.map((param) => ({
-                      value: param,
-                      dataKey: param,
-                      color: chartConfig[param]?.color,
-                      name: chartConfig[param]?.label || param,
-                    }))}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+                <ChartLegend
+                  payload={[
+                    {
+                      value: selectedParameter,
+                      dataKey: selectedParameter,
+                      color: chartConfig?.[selectedParameter]?.color,
+                    },
+                  ]}
+                />
+              </LineChart>
             </ChartContainer>
           </div>
         </div>

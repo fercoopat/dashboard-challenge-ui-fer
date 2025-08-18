@@ -29,14 +29,16 @@ type DashboardContextValue = {
   historicalData: RangeResponse;
   selectedParameter: AIR_QUERY_PARAM;
   filters: FilterState;
-  isLoading: boolean;
+  isLoadingSummaryQuery: boolean;
+  isLoadingTimelineQuery: boolean;
+  isLoadingHistoricalDataQuery: boolean;
   isRefetching: boolean;
-  hasError: Error | null;
+  error: Error | null;
   errorMessage: string | undefined;
   updateDateRange: (from: Date, to: Date) => void;
   updateOperator: (operator: OPERATORS) => void;
   updateInterval: (interval: INTERVALS) => void;
-  updateSelectedParameters: (parameters: AIR_QUERY_PARAM[]) => void;
+  updateSelectedParameter: (parameter: AIR_QUERY_PARAM) => void;
   resetFilters: () => void;
   refetchSummary: (
     options?: RefetchOptions

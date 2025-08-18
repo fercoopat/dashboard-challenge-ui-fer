@@ -8,7 +8,7 @@ import { useDashboard } from '@/modules/dashboard/contexts/dashboard.context';
 
 const DashboardHeader = () => {
   const {
-    isLoading,
+    isLoadingSummaryQuery,
     isRefetching,
     rangeValues,
     handleRangeChange,
@@ -52,7 +52,7 @@ const DashboardHeader = () => {
               <Button
                 variant='outline'
                 onClick={handleRefresh}
-                disabled={isLoading}
+                disabled={isLoadingSummaryQuery}
                 className='flex items-center gap-2'
               >
                 <RefreshCw

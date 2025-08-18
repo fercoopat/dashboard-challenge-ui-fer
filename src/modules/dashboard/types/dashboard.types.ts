@@ -56,7 +56,7 @@ export interface FilterState {
     from: Date;
     to: Date;
   };
-  selectedParameters: AIR_QUERY_PARAM[];
+  selectedParameter: AIR_QUERY_PARAM;
   operator: OPERATORS;
   interval: INTERVALS;
 }

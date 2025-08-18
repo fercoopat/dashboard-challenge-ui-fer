@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DASHBOARD_QUERY_KEYS } from '@/modules/dashboard/constants/dashboard-query-keys';
 import {
+  AIR_QUALITY_CHART_MAP,
   AIR_QUERY_PARAM,
   DEFAULT_DATE_RANGE,
   INTERVALS,
   OPERATORS,
-  VALUES_KEY_LABELS,
 } from '@/modules/dashboard/constants/dashboard.constants';
 import { DashboardService } from '@/modules/dashboard/services/dashboard.service';
 import {
@@ -19,12 +19,7 @@ import {
 export const useAirQualityService = (onResetFilters?: () => void) => {
   const [filters, setFilters] = useState<FilterState>({
     dateRange: DEFAULT_DATE_RANGE,
-    selectedParameters: [
-      AIR_QUERY_PARAM.CO,
-      AIR_QUERY_PARAM.NO2,
-      AIR_QUERY_PARAM.T,
-      AIR_QUERY_PARAM.RH,
-    ],
+    selectedParameter: AIR_QUERY_PARAM.CO,
     operator: OPERATORS.AVG,
     interval: INTERVALS.DAILY,
   });
@@ -53,14 +48,14 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
   const timelineQuery = useQuery({
     queryKey: [
       DASHBOARD_QUERY_KEYS.TIMELINE,
-      filters.selectedParameters.at(0) || '',
+      filters.selectedParameter,
       filters.dateRange.from,
       filters.dateRange.to,
       filters.interval,
     ],
     queryFn: () =>
       DashboardService.getTimeline(
-        filters.selectedParameters[0] || AIR_QUERY_PARAM.CO,
+        filters.selectedParameter,
         filters.dateRange.from,
         filters.dateRange.to,
         filters.interval
@@ -68,7 +63,7 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
     enabled:
       !!filters.dateRange.from &&
       !!filters.dateRange.to &&
-      filters.selectedParameters.length > 0,
+      filters.selectedParameter.length > 0,
   });
 
   const historicalDataQuery = useQuery({
@@ -101,7 +96,7 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
 
       return {
         key,
-        label: VALUES_KEY_LABELS[key as AIR_QUERY_PARAM]?.label || key,
+        label: AIR_QUALITY_CHART_MAP[key as AIR_QUERY_PARAM]?.label || key,
         value: currentValue,
         previousValue,
         change,
@@ -112,14 +107,16 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
 
   // Transform timeline data for chart
   const chartData = useMemo((): ChartDataPoint[] => {
-    if (!timelineQuery.data || !filters.selectedParameters[0]) return [];
+    if (!timelineQuery.data || !filters.selectedParameter) return [];
 
-    const selectedParam = filters.selectedParameters[0];
+    const selectedParam = filters.selectedParameter;
+
     return timelineQuery.data.map((item) => ({
       date: item.interval,
-      [selectedParam]: item[selectedParam] || 0,
+      [selectedParam]:
+        typeof item[selectedParam] === 'number' ? item[selectedParam] : 0,
     }));
-  }, [timelineQuery.data, filters.selectedParameters]);
+  }, [timelineQuery.data, filters.selectedParameter]);
 
   // Update previous metrics when new data arrives
   useEffect(() => {
@@ -154,25 +151,17 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
     }));
   }, []);
 
-  const updateSelectedParameters = useCallback(
-    (parameters: AIR_QUERY_PARAM[]) => {
-      setFilters((prev) => ({
-        ...prev,
-        selectedParameters: parameters,
-      }));
-    },
-    []
-  );
+  const updateSelectedParameter = useCallback((parameter: AIR_QUERY_PARAM) => {
+    setFilters((prev) => ({
+      ...prev,
+      selectedParameter: parameter,
+    }));
+  }, []);
 
   const resetFilters = useCallback(() => {
     setFilters({
       dateRange: DEFAULT_DATE_RANGE,
-      selectedParameters: [
-        AIR_QUERY_PARAM.CO,
-        AIR_QUERY_PARAM.NO2,
-        AIR_QUERY_PARAM.T,
-        AIR_QUERY_PARAM.RH,
-      ],
+      selectedParameter: AIR_QUERY_PARAM.CO,
       operator: OPERATORS.AVG,
       interval: INTERVALS.DAILY,
     });
@@ -185,46 +174,79 @@ export const useAirQualityService = (onResetFilters?: () => void) => {
   }, [onResetFilters]);
 
   // Error handling
-  const hasError =
-    summaryQuery.error || timelineQuery.error || historicalDataQuery.error;
-  const errorMessage =
-    summaryQuery.error?.message ||
-    timelineQuery.error?.message ||
-    historicalDataQuery.error?.message;
+  const error = useMemo(
+    () =>
+      summaryQuery.error || timelineQuery.error || historicalDataQuery.error,
+    [summaryQuery.error, timelineQuery.error, historicalDataQuery.error]
+  );
+
+  const errorMessage = useMemo(
+    () =>
+      summaryQuery.error?.message ||
+      timelineQuery.error?.message ||
+      historicalDataQuery.error?.message,
+    [
+      summaryQuery.error?.message,
+      timelineQuery.error?.message,
+      historicalDataQuery.error?.message,
+    ]
+  );
 
   // Loading states
-  const isLoading =
-    summaryQuery.isLoading ||
-    timelineQuery.isLoading ||
-    historicalDataQuery.isLoading;
-  const isRefetching =
-    summaryQuery.isRefetching ||
-    timelineQuery.isRefetching ||
-    historicalDataQuery.isRefetching;
+  const {
+    isLoadingSummaryQuery,
+    isLoadingTimelineQuery,
+    isLoadingHistoricalDataQuery,
+  } = useMemo(
+    () => ({
+      isLoadingSummaryQuery: summaryQuery.isLoading,
+      isLoadingTimelineQuery: timelineQuery.isLoading,
+      isLoadingHistoricalDataQuery: historicalDataQuery.isLoading,
+    }),
+    [
+      summaryQuery.isLoading,
+      timelineQuery.isLoading,
+      historicalDataQuery.isLoading,
+    ]
+  );
+
+  const isRefetching = useMemo(
+    () =>
+      summaryQuery.isRefetching ||
+      timelineQuery.isRefetching ||
+      historicalDataQuery.isRefetching,
+    [
+      summaryQuery.isRefetching,
+      timelineQuery.isRefetching,
+      historicalDataQuery.isRefetching,
+    ]
+  );
 
   return {
     // Data
     metricCards,
     chartData,
     historicalData: historicalDataQuery.data || [],
-    selectedParameter: filters.selectedParameters[0],
+    selectedParameter: filters.selectedParameter,
 
     // State
     filters,
 
     // Loading states
-    isLoading,
+    isLoadingSummaryQuery,
+    isLoadingTimelineQuery,
+    isLoadingHistoricalDataQuery,
     isRefetching,
 
     // Error handling
-    hasError,
+    error,
     errorMessage,
 
     // Handlers
     updateDateRange,
     updateOperator,
     updateInterval,
-    updateSelectedParameters,
+    updateSelectedParameter,
     resetFilters,
 
     // Query refetch functions
